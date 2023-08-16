@@ -1,7 +1,7 @@
 import { addHours, differenceInSeconds } from "date-fns";
 import Swal from "sweetalert2";
 import 'sweetalert2/dist/sweetalert2.min.css'
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Modal from "react-modal";
 import DatePicker, {registerLocale} from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -30,6 +30,14 @@ export const CalendarModal = () => {
     start:new Date(),
     end:addHours(new Date(),2)
   });
+
+  const titleClass = useMemo(()=>{
+    if(!formSubmitted) return '';
+    return (formValues.title.length >0)
+        ? ''
+        : 'is-invalid';
+
+  },[formValues.title,formSubmitted])
 
   const onInputChange = ({target}) =>{
     setFormValues({
@@ -107,7 +115,7 @@ export const CalendarModal = () => {
           <label>Titulo y notas</label>
           <input
             type="text"
-            className="form-control"
+            className={`form-control ${titleClass}`}
             placeholder="Título del evento"
             name="title"
             autoComplete="off"
