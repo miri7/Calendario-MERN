@@ -1,11 +1,14 @@
 import { addHours, differenceInSeconds } from "date-fns";
 import Swal from "sweetalert2";
 import 'sweetalert2/dist/sweetalert2.min.css'
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Modal from "react-modal";
 import DatePicker, {registerLocale} from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import es from 'date-fns/locale/es';
+import { useUiStore } from "../../hooks/useUiStore";
+import { useCalendarStore } from "../../hooks/useCalendarStore";
+import { onCloseDateModal } from "../../store/ui/uiSlice";
 registerLocale('es', es)
 
 const customStyles = {
@@ -22,11 +25,14 @@ const customStyles = {
 Modal.setAppElement("#root");
 
 export const CalendarModal = () => {
-  const [isOpen, setIsOpen] = useState(true);
+
+  const {isDateModalOpen,onCloseModal} = useUiStore();
+  const{ activeEvent,startSavingEvent} =  useCalendarStore()
+ 
   const [formSubmitted,setFormSubmitted] = useState(false)
   const [formValues,setFormValues] = useState({
-    title:'miriam',
-    notes:'damian ',
+    title:'',
+    notes:'',
     start:new Date(),
     end:addHours(new Date(),2)
   });
@@ -38,6 +44,14 @@ export const CalendarModal = () => {
         : 'is-invalid';
 
   },[formValues.title,formSubmitted])
+
+  useEffect(() => {
+    if(activeEvent !== null){
+      setFormValues({...activeEvent})
+    }
+  }, [activeEvent])
+  
+
 
   const onInputChange = ({target}) =>{
     setFormValues({
@@ -52,7 +66,7 @@ export const CalendarModal = () => {
         [changing]:event
       })
   }
-  const onSubmit = (event) =>{
+  const onSubmit = async (event) =>{
     event.preventDefault();
     setFormSubmitted(true);
     const difference = differenceInSeconds(formValues.end, formValues.start);
@@ -63,18 +77,20 @@ export const CalendarModal = () => {
     if(formValues.title.length <= 0) return;
     console.log(formValues);
     //todo:
-    // cerrar Modal
-    // remover modal
+    await startSavingEvent(formValues)
+    onCloseModal();
+    setFormSubmitted(false)
   }
 
-  const onCloseModal = () => {
-    console.log("cerrando modal");
-    setIsOpen(false);
+  const onCloseModal2 = () => {
+    
+    onCloseModal()
+  
   };
   return (
     <Modal
-      isOpen={isOpen}
-      onRequestClose={onCloseModal}
+      isOpen={isDateModalOpen}
+      onRequestClose={onCloseModal2}
       style={customStyles}
       className="modal"
       overlayClassName="modal-fondo"
